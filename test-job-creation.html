@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Job Creation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .output {
+            background: #f5f5f5;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Job Creation API</h1>
+    
+    <div>
+        <label>Token (from browser cookies):</label>
+        <input type="text" id="token" placeholder="Paste your token here">
+        <button onclick="getTokenFromCookies()">Get from Cookies</button>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <button onclick="testJobCreation()">Test Job Creation</button>
+    </div>
+    
+    <div class="output" id="output">Output will appear here...</div>
+
+    <script>
+        function getTokenFromCookies() {
+            const cookies = document.cookie.split(';');
+            const tokenCookie = cookies.find(c => c.trim().startsWith('token='));
+            if (tokenCookie) {
+                const token = tokenCookie.split('=')[1];
+                document.getElementById('token').value = token;
+                log('Token found: ' + token.substring(0, 20) + '...', 'success');
+            } else {
+                log('No token found in cookies. Please login first.', 'error');
+            }
+        }
+
+        async function testJobCreation() {
+            const token = document.getElementById('token').value;
+            
+            if (!token) {
+                log('Please provide a token', 'error');
+                return;
+            }
+
+            const jobData = {
+                title: "Test Software Engineer Position",
+                description: "This is a test job posting to verify the API is working correctly.",
+                jobType: "full-time",
+                workMode: "office",
+                experienceLevel: "entry",
+                salaryRange: {
+                    min: 50000,
+                    max: 70000,
+                    currency: "USD"
+                },
+                location: {
+                    city: "Test City",
+                    state: "Test State",
+                    country: "Test Country",
+                    remote: false
+                },
+                requiredSkills: [
+                    { name: "JavaScript", level: "intermediate" },
+                    { name: "React", level: "intermediate" }
+                ],
+                responsibilities: ["Write code", "Debug issues"],
+                qualifications: ["Bachelor's degree"],
+                benefits: ["Health insurance"],
+                numberOfOpenings: 1
+            };
+
+            log('Sending request to: http://localhost:5000/api/employers/jobs');
+            log('Job Data: ' + JSON.stringify(jobData, null, 2));
+
+            try {
+                const response = await fetch('http://localhost:5000/api/employers/jobs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(jobData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✅ SUCCESS!', 'success');
+                    log('Response: ' + JSON.stringify(data, null, 2), 'success');
+                } else {
+                    log('❌ ERROR!', 'error');
+                    log('Status: ' + response.status, 'error');
+                    log('Response: ' + JSON.stringify(data, null, 2), 'error');
+                }
+            } catch (error) {
+                log('❌ NETWORK ERROR!', 'error');
+                log('Error: ' + error.message, 'error');
+            }
+        }
+
+        function log(message, type = '') {
+            const output = document.getElementById('output');
+            const className = type ? `class="${type}"` : '';
+            output.innerHTML += `<div ${className}>${message}</div>\n`;
+        }
+    </script>
+</body>
+</html>

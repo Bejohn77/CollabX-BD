@@ -1,9 +1,10 @@
-'use client';
 
+'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { studentAPI } from '@/services/api';
+// ...existing code...
 
 export default function StudentProfile() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function StudentProfile() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [activeTab, setActiveTab] = useState('personal');
+  const [isEditing, setIsEditing] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -368,6 +370,15 @@ export default function StudentProfile() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">{user?.email}</span>
+              {!isEditing ? (
+                <button onClick={() => setIsEditing(true)} className="btn btn-primary btn-sm">
+                  Edit Profile
+                </button>
+              ) : (
+                <button onClick={() => setIsEditing(false)} className="btn btn-secondary btn-sm">
+                  Cancel Edit
+                </button>
+              )}
               <button onClick={handleLogout} className="btn btn-outline text-sm">
                 Logout
               </button>
@@ -390,6 +401,114 @@ export default function StudentProfile() {
         )}
 
         {/* Tabs */}
+        {!isEditing && (
+          <div className="mb-6">
+            {/* View-only profile details and all sections */}
+            <div className="card mb-6">
+              <div className="flex items-center space-x-6">
+                <div>
+                  {formData.profilePhoto ? (
+                    <img src={`http://localhost:5000${formData.profilePhoto}`} alt="Profile" className="w-24 h-24 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-primary-600 flex items-center justify-center text-white text-2xl">
+                      {formData.firstName?.charAt(0) || 'S'}{formData.lastName?.charAt(0) || ''}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">{formData.firstName} {formData.lastName}</h2>
+                  <p className="text-sm text-gray-600 mt-1">{formData.bio}</p>
+                  <p className="text-sm text-gray-500 mt-2">{formData.location?.city}, {formData.location?.state}, {formData.location?.country}</p>
+                  <p className="text-sm text-gray-500 mt-2">Phone: {formData.phone}</p>
+                  <p className="text-sm text-gray-500 mt-2">University: {formData.university?.name} ({formData.university?.graduationYear})</p>
+                  <p className="text-sm text-gray-500 mt-2">Email: {formData.university?.email}</p>
+                  <div className="mt-2 flex gap-2">
+                    {formData.socialLinks?.linkedin && <a href={formData.socialLinks.linkedin} target="_blank" rel="noopener" className="text-blue-600 underline">LinkedIn</a>}
+                    {formData.socialLinks?.github && <a href={formData.socialLinks.github} target="_blank" rel="noopener" className="text-gray-800 underline">GitHub</a>}
+                    {formData.socialLinks?.portfolio && <a href={formData.socialLinks.portfolio} target="_blank" rel="noopener" className="text-green-600 underline">Portfolio</a>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Education */}
+            <div className="card mb-6">
+              <h3 className="text-lg font-bold mb-2">Education</h3>
+              {formData.education?.length ? (
+                <ul className="space-y-2">
+                  {formData.education.map((edu, idx) => (
+                    <li key={idx} className="border-b pb-2">
+                      <span className="font-semibold">{edu.institution}</span> — {edu.degree}, {edu.fieldOfStudy} ({edu.startDate?.slice(0,7)} - {edu.current ? 'Present' : edu.endDate?.slice(0,7)})<br />
+                      <span className="text-xs text-gray-500">GPA: {edu.gpa}</span>
+                      {edu.description && <div className="text-xs text-gray-600 mt-1">{edu.description}</div>}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-gray-500">No education added.</p>}
+            </div>
+
+            {/* Skills */}
+            <div className="card mb-6">
+              <h3 className="text-lg font-bold mb-2">Skills</h3>
+              {formData.skills?.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {formData.skills.map((skill, idx) => (
+                    <span key={idx} className="badge badge-primary">{skill.name} ({skill.proficiency})</span>
+                  ))}
+                </div>
+              ) : <p className="text-gray-500">No skills added.</p>}
+            </div>
+
+            {/* Experience */}
+            <div className="card mb-6">
+              <h3 className="text-lg font-bold mb-2">Work Experience</h3>
+              {formData.experience?.length ? (
+                <ul className="space-y-2">
+                  {formData.experience.map((exp, idx) => (
+                    <li key={idx} className="border-b pb-2">
+                      <span className="font-semibold">{exp.position}</span> at {exp.company} ({exp.startDate?.slice(0,7)} - {exp.current ? 'Present' : exp.endDate?.slice(0,7)})<br />
+                      <span className="text-xs text-gray-500">Location: {exp.location}</span>
+                      {exp.description && <div className="text-xs text-gray-600 mt-1">{exp.description}</div>}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-gray-500">No experience added.</p>}
+            </div>
+
+            {/* Projects */}
+            <div className="card mb-6">
+              <h3 className="text-lg font-bold mb-2">Projects</h3>
+              {formData.projects?.length ? (
+                <ul className="space-y-2">
+                  {formData.projects.map((proj, idx) => (
+                    <li key={idx} className="border-b pb-2">
+                      <span className="font-semibold">{proj.title}</span> ({proj.category})<br />
+                      <span className="text-xs text-gray-500">{proj.technologies?.join(', ')}</span><br />
+                      {proj.description && <div className="text-xs text-gray-600 mt-1">{proj.description}</div>}
+                      {proj.projectUrl && <a href={proj.projectUrl} target="_blank" rel="noopener" className="text-blue-600 underline mr-2">Project Link</a>}
+                      {proj.githubUrl && <a href={proj.githubUrl} target="_blank" rel="noopener" className="text-gray-800 underline">GitHub</a>}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="text-gray-500">No projects added.</p>}
+            </div>
+
+            {/* Job Preferences */}
+            <div className="card mb-6">
+              <h3 className="text-lg font-bold mb-2">Job Preferences</h3>
+              <ul className="space-y-1">
+                <li>Desired Roles: {formData.jobPreferences?.desiredRoles?.join(', ') || 'N/A'}</li>
+                <li>Desired Locations: {formData.jobPreferences?.desiredLocations?.join(', ') || 'N/A'}</li>
+                <li>Expected Salary: {formData.jobPreferences?.expectedSalary?.min} - {formData.jobPreferences?.expectedSalary?.max} {formData.jobPreferences?.expectedSalary?.currency || 'BDT'}</li>
+                <li>Preferred Job Types: {formData.jobPreferences?.jobType?.join(', ') || 'N/A'}</li>
+                <li>Willing to Relocate: {formData.jobPreferences?.willingToRelocate ? 'Yes' : 'No'}</li>
+                <li>Looking for Job: {formData.isLookingForJob ? 'Yes' : 'No'}</li>
+                <li>Available for Freelance: {formData.isAvailableForFreelance ? 'Yes' : 'No'}</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6 border-b border-gray-200">
           <nav className="-mb-px flex space-x-8">
             {['personal', 'education', 'skills', 'experience', 'projects', 'preferences'].map(tab => (
@@ -407,8 +526,8 @@ export default function StudentProfile() {
             ))}
           </nav>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {isEditing ? (
+          <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information Tab */}
           {activeTab === 'personal' && (
             <div className="card">
@@ -1116,7 +1235,8 @@ export default function StudentProfile() {
               {saving ? 'Saving...' : 'Save Profile'}
             </button>
           </div>
-        </form>
+          </form>
+        ) : null}
       </main>
     </div>
   );

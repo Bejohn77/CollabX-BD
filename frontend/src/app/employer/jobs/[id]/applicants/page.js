@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { employerAPI } from '../../../../../services/api';
 
+// Helper function to get the API base URL (without /api)
+const getBackendUrl = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+  return apiUrl.replace('/api', '').replace(/\/$/, '');
+};
+
 export default function JobApplicantsPage({ params }) {
   const router = useRouter();
   const [job, setJob] = useState(null);
@@ -162,6 +168,33 @@ export default function JobApplicantsPage({ params }) {
                       </div>
                     )}
 
+                    {/* Resume/CV */}
+                    {application.resume && application.resume.url && (
+                      <div className="mb-3">
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Resume</h4>
+                        <a
+                          href={
+                            application.resume.url.startsWith('http')
+                              ? application.resume.url
+                              : `${getBackendUrl()}${application.resume.url}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          Download {application.resume.filename || 'Resume'}
+                        </a>
+                        {application.resume.uploadedAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Uploaded {new Date(application.resume.uploadedAt).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Custom Answers */}
                     {application.customAnswers && application.customAnswers.length > 0 && (
                       <div className="mb-3">
@@ -194,6 +227,18 @@ export default function JobApplicantsPage({ params }) {
 
                   {/* Action Buttons */}
                   <div className="ml-4 flex flex-col gap-2">
+                    {/* View Full Application */}
+                    <button
+                      onClick={() => router.push(`/employer/jobs/${params.id}/applicants/${application._id}`)}
+                      className="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      View Details
+                    </button>
+
                     {application.status === 'pending' && (
                       <>
                         <button

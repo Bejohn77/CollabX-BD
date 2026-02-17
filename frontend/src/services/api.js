@@ -77,7 +77,10 @@ export const jobAPI = {
   getAllJobs: (params) => api.get('/jobs', { params }),
   getJob: (id) => api.get(`/jobs/${id}`),
   getJobById: (id) => api.get(`/jobs/${id}`),
-  applyToJob: (id, data) => api.post(`/jobs/${id}/apply`, data),
+  applyToJob: (id, data) => {
+    const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+    return api.post(`/jobs/${id}/apply`, data, config);
+  },
   getMyApplications: (params) => api.get('/jobs/applications/my', { params }),
   withdrawApplication: (id, reason) => api.put(`/jobs/applications/${id}/withdraw`, { reason }),
   getRecommendations: (page = 1, limit = 10) => api.get(`/jobs/recommendations?page=${page}&limit=${limit}`)
@@ -85,7 +88,10 @@ export const jobAPI = {
 
 // Application API
 export const applicationAPI = {
-  applyForJob: (jobId, data) => api.post(`/jobs/${jobId}/apply`, data),
+  applyForJob: (jobId, data) => {
+    const config = data instanceof FormData ? { headers: { 'Content-Type': 'multipart/form-data' } } : {};
+    return api.post(`/jobs/${jobId}/apply`, data, config);
+  },
   getMyApplications: (params) => api.get('/jobs/applications/my', { params }),
   withdrawApplication: (id, reason) => api.put(`/jobs/applications/${id}/withdraw`, { reason })
 };

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Cookies from 'js-cookie';
 import { studentAPI, jobAPI, courseAPI } from '@/services/api';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -104,9 +105,9 @@ export default function StudentDashboard() {
                   className="w-10 h-10 rounded-full object-cover border-2 border-primary-200"
                 />
               )}
-              <span className="text-sm text-gray-600 dark:text-gray-300">
+              <Link href="/student/profile" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">
                 Welcome, {user?.firstName || user?.email}
-              </span>
+              </Link>
               <ThemeToggle />
               <button
                 onClick={handleLogout}
@@ -141,9 +142,11 @@ export default function StudentDashboard() {
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {user?.firstName && user?.lastName 
-                  ? `${user.firstName} ${user.lastName}`
-                  : user?.email?.split('@')[0] || 'Student'}
+                <Link href="/student/profile" className="hover:underline">
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.email?.split('@')[0] || 'Student'}
+                </Link>
               </h2>
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                 <span className="font-medium">Email:</span> {user?.email}
@@ -155,9 +158,11 @@ export default function StudentDashboard() {
             <div className="text-right">
               <p className="text-sm text-gray-600 dark:text-gray-300">Registered Name</p>
               <p className="text-lg font-semibold text-primary-700">
-                {user?.firstName && user?.lastName 
-                  ? `${user.firstName} ${user.lastName}`
-                  : 'Complete your profile'}
+                <Link href="/student/profile" className="hover:underline">
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : 'Complete your profile'}
+                </Link>
               </p>
             </div>
           </div>

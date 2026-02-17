@@ -16,6 +16,8 @@ export default function JobDetailsPage({ params }) {
     coverLetter: '',
     customAnswers: []
   });
+  const [resumeFile, setResumeFile] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
 
   useEffect(() => {
     loadJobDetails();
@@ -65,7 +67,16 @@ export default function JobDetailsPage({ params }) {
     setApplying(true);
 
     try {
-      await applicationAPI.applyForJob(params.id, applicationData);
+      // If a resume file is attached, send multipart/form-data
+      if (resumeFile) {
+        const formData = new FormData();
+        formData.append('coverLetter', applicationData.coverLetter);
+        formData.append('customAnswers', JSON.stringify(applicationData.customAnswers || []));
+        formData.append('resume', resumeFile);
+        await applicationAPI.applyForJob(params.id, formData);
+      } else {
+        await applicationAPI.applyForJob(params.id, applicationData);
+      }
       alert('Application submitted successfully!');
       setShowApplicationModal(false);
       setHasApplied(true);
@@ -77,6 +88,38 @@ export default function JobDetailsPage({ params }) {
       setApplying(false);
     }
   };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowed.includes(file.type)) {
+      alert('Only PDF, DOC, DOCX files are allowed for resume.');
+      return;
+    }
+    setResumeFile(file);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowed.includes(file.type)) {
+        alert('Only PDF, DOC, DOCX files are allowed for resume.');
+        return;
+      }
+      setResumeFile(file);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const removeFile = () => setResumeFile(null);
 
   const handleCustomAnswerChange = (index, value) => {
     const newAnswers = [...applicationData.customAnswers];
@@ -400,6 +443,28 @@ export default function JobDetailsPage({ params }) {
                     ))}
                   </div>
                 )}
+
+                    {/* Resume Upload */}
+                    <div className="mb-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Resume (PDF/DOC/DOCX)</h3>
+                      <div
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={() => setDragOver(false)}
+                        className={`border-dashed border-2 p-4 rounded-md text-center ${dragOver ? 'border-primary-600 bg-primary-50' : 'border-gray-300 bg-white'}`}
+                      >
+                        <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="hidden" id="resumeInput" />
+                        <label htmlFor="resumeInput" className="cursor-pointer block">
+                          <div className="text-sm text-gray-600">Drag & drop your resume here, or <span className="text-primary-600 underline">browse</span></div>
+                        </label>
+                        {resumeFile && (
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="text-sm text-gray-700">{resumeFile.name} ({(resumeFile.size/1024).toFixed(0)} KB)</div>
+                            <button type="button" onClick={removeFile} className="text-sm text-red-500">Remove</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                 {/* Buttons */}
                 <div className="flex gap-3 justify-end">

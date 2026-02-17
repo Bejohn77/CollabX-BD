@@ -242,6 +242,7 @@ exports.getApplicants = asyncHandler(async (req, res) => {
     .sort('-matchScore -createdAt')
     .skip(skip)
     .limit(parseInt(limit))
+    .select('job student coverLetter customAnswers resume status matchScore viewedByEmployer employerNotes createdAt')
     .populate('student', 'email isVerified')
     .populate({
       path: 'student',

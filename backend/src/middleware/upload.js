@@ -1,24 +1,32 @@
+const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 
 // Configure storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    let uploadPath = 'uploads/';
-    
+    let uploadPath = path.resolve(process.cwd(), 'uploads');
+
     // Organize uploads by type
     if (file.fieldname === 'resume') {
-      uploadPath += 'resumes/';
+      uploadPath = path.join(uploadPath, 'resumes');
     } else if (file.fieldname === 'profilePhoto') {
-      uploadPath += 'profiles/';
+      uploadPath = path.join(uploadPath, 'profiles');
     } else if (file.fieldname === 'companyLogo') {
-      uploadPath += 'logos/';
+      uploadPath = path.join(uploadPath, 'logos');
     } else if (file.fieldname === 'project') {
-      uploadPath += 'projects/';
+      uploadPath = path.join(uploadPath, 'projects');
     } else {
-      uploadPath += 'documents/';
+      uploadPath = path.join(uploadPath, 'documents');
     }
-    
+
+    // Ensure directory exists
+    try {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    } catch (err) {
+      return cb(err);
+    }
+
     cb(null, uploadPath);
   },
   filename: function (req, file, cb) {

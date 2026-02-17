@@ -106,8 +106,17 @@ exports.getJob = asyncHandler(async (req, res) => {
  * @access  Private (Student)
  */
 exports.applyToJob = asyncHandler(async (req, res) => {
-  const { coverLetter, customAnswers } = req.body;
+  let { coverLetter, customAnswers } = req.body;
   const jobId = req.params.id;
+  
+  // Parse customAnswers if it comes as a JSON string (from FormData)
+  if (typeof customAnswers === 'string') {
+    try {
+      customAnswers = JSON.parse(customAnswers);
+    } catch (e) {
+      customAnswers = [];
+    }
+  }
   
   // Check if job exists
   const job = await Job.findById(jobId);
@@ -140,17 +149,31 @@ exports.applyToJob = asyncHandler(async (req, res) => {
   
   // Get student profile for resume
   const profile = await StudentProfile.findOne({ user: req.user._id });
-  
+
   // Calculate match score
   const matchScore = calculateMatchScore(profile, job);
-  
+
+  // If a resume file was uploaded, use it; otherwise fall back to profile.resume
+  let resumeData = null;
+  if (req.file) {
+    // Build public URL relative to server static route
+    const publicUrl = `/uploads/resumes/${req.file.filename}`;
+    resumeData = {
+      filename: req.file.filename,
+      url: publicUrl,
+      uploadedAt: new Date()
+    };
+  } else if (profile && profile.resume) {
+    resumeData = profile.resume;
+  }
+
   // Create application
   const application = await Application.create({
     job: jobId,
     student: req.user._id,
     coverLetter,
     customAnswers,
-    resume: profile.resume,
+    resume: resumeData,
     matchScore,
     status: 'pending'
   });
@@ -305,6 +328,11 @@ exports.getRecommendations = asyncHandler(async (req, res) => {
 function calculateMatchScore(profile, job) {
   let score = 0;
   let maxScore = 100;
+  
+  // Return 0 if profile doesn't exist
+  if (!profile) {
+    return 0;
+  }
   
   // Skills matching (40 points)
   if (profile.skills && profile.skills.length > 0 && job.requiredSkills && job.requiredSkills.length > 0) {

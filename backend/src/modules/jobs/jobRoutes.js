@@ -3,6 +3,7 @@ const { body } = require('express-validator');
 const { validate } = require('../../middleware/validator');
 const { protect, authorize, optionalAuth } = require('../../middleware/auth');
 const jobController = require('./jobController');
+const upload = require('../../middleware/upload');
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.get('/:id', jobController.getJob);
 router.post('/:id/apply',
   protect,
   authorize('student'),
+  upload.single('resume'),
   [
     body('coverLetter').optional().trim(),
     validate

@@ -557,7 +557,7 @@ export default function StudentProfile() {
                       value={formData.university.name}
                       onChange={handleChange}
                       className="input"
-                      placeholder="University of Dhaka"
+                      placeholder="University of Frontier Technology, Bangladesh"
                     />
                   </div>
                   <div>
